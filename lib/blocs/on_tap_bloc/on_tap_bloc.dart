@@ -8,16 +8,20 @@ part 'on_tap_event.dart';
 part 'on_tap_state.dart';
 
 class OnTapBloc extends Bloc<OnTapEvent, OnTapState> {
-  OnTapBloc() : super(InitialState());
+  OnTapBloc() : super(InitialState()) {
+    on<OnTapEvent>((event, emit) async {
+      var state = await mapEventToState(event);
+      emit(state);
+    });
+  }
 
-  @override
-  Stream<OnTapState> mapEventToState(
+  Future<OnTapState> mapEventToState(
     OnTapEvent event,
-  ) async* {
+  ) async {
     if (event is MapStopTapped) {
-      yield TappedState(stopName: event.stopName, index: event.index);
+      return TappedState(stopName: event.stopName, index: event.index);
     } else if (event is TileStopTapped) {
-      yield TappedState(stopName: event.stopName);
+      return TappedState(stopName: event.stopName);
     }
   }
 }

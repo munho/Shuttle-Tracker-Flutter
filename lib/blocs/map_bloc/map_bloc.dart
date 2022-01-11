@@ -3,7 +3,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong/latlong.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../../data/models/shuttle_route.dart';
 import '../../data/models/shuttle_stop.dart';
@@ -13,13 +13,19 @@ import '../../widgets/shuttle_svg.dart';
 import '../on_tap_bloc/on_tap_bloc.dart';
 
 part 'map_event.dart';
+
 part 'map_state.dart';
 
 class MapBloc extends Bloc<MapEvent, MapState> {
   final ShuttleRepository repository;
   bool isLoading = true;
 
-  MapBloc({this.repository}) : super(MapInitial());
+  MapBloc({this.repository}) : super(MapInitial()) {
+    on<GetMapData>((event, emit) async {
+      var state = await mapEventToState(event);
+      emit(state);
+    });
+  }
 
   MapRoutes _createRoutes({
     @required List<ShuttleRoute> routes,
@@ -100,8 +106,9 @@ class MapBloc extends Bloc<MapEvent, MapState> {
     return LatLng(lat, long);
   }
 
-  @override
-  Stream<MapState> mapEventToState(MapEvent event) async* {
+  // @override
+  // Stream<MapState> mapEventToState(MapEvent event) async* {
+  Future<MapState> mapEventToState(MapEvent event) async {
     MapRoutes mapRoutes;
     var routes = <Polyline>[];
     var darkRoutes = <Polyline>[];
@@ -144,31 +151,32 @@ class MapBloc extends Bloc<MapEvent, MapState> {
       center = _findAvgLatLong(repoStops);
 
       if (isLoading) {
-        yield MapLoading();
         isLoading = false;
+        return MapLoading();
       } else {
         /// Poll every 3ish seconds
         // await Future.delayed(const Duration(seconds: 2));
       }
 
       if (repository.getIsConnected) {
-        yield MapLoaded(
-            routes: routes,
-            darkRoutes: darkRoutes,
-            stops: stops,
-            updates: updates,
-            location: location,
-            center: center,
-            legend: auxData.legend,
-            darkLegend: auxData.darkLegend,
-            routeColors: auxData.colors);
+        return MapLoaded(
+                routes: routes,
+                darkRoutes: darkRoutes,
+                stops: stops,
+                updates: updates,
+                location: location,
+                center: center,
+                legend: auxData.legend,
+                darkLegend: auxData.darkLegend,
+                routeColors: auxData.colors);
       } else {
         isLoading = true;
         await Future.delayed(const Duration(seconds: 3));
-        yield MapError();
+        return MapError();
       }
       // await Future.delayed(const Duration(seconds: 2));
     }
+    return MapInitial();
   }
 }
 

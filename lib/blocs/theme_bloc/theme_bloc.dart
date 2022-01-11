@@ -8,7 +8,12 @@ import '../../theme/theme.dart' as theme;
 enum ThemeEvent { toggle }
 
 class ThemeBloc extends HydratedBloc<ThemeEvent, ThemeState> {
-  ThemeBloc() : super(ThemeState(isDarkMode: false));
+  ThemeBloc() : super(ThemeState(isDarkMode: false)) {
+    on<ThemeEvent>((event, emit) async {
+      var state = await mapEventToState(event);
+      emit(state);
+    });
+  }
 
   @override
   ThemeState fromJson(Map<String, dynamic> source) {
@@ -28,15 +33,15 @@ class ThemeBloc extends HydratedBloc<ThemeEvent, ThemeState> {
     }
   }
 
-  @override
-  Stream<ThemeState> mapEventToState(ThemeEvent event) async* {
+  Future<ThemeState> mapEventToState(ThemeEvent event) async {
     switch (event) {
       case ThemeEvent.toggle:
-        yield state.isDarkMode == true
+        return state.isDarkMode == true
             ? ThemeState(isDarkMode: false)
             : ThemeState(isDarkMode: true);
         break;
     }
+    return ThemeState(isDarkMode: false);
   }
 }
 

@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
-import 'package:latlong/latlong.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../../data/models/shuttle_route.dart';
 import '../../data/models/shuttle_stop.dart';
@@ -26,20 +26,25 @@ class RoutesBloc extends Bloc<RoutesEvent, RoutesState> {
   bool isLoading = true;
 
   /// RoutesBloc named constructor
-  RoutesBloc({this.repository}) : super(RoutesInitial());
+  RoutesBloc({this.repository}) : super(RoutesInitial()) {
+    on<RoutesEvent>((event, emit) async {
+      var state = await mapEventToState(event);
+      emit(state);
+    });
+  }
 
-  @override
-  Stream<RoutesState> mapEventToState(RoutesEvent event) async* {
+  Future<RoutesState> mapEventToState(RoutesEvent event) async {
     switch (event) {
       case RoutesEvent.getRoutesPageData:
-        yield RoutesLoading();
+        //yield RoutesLoading();
 
         routes = await repository.getRoutes;
         darkRoutes = await repository.getDarkRoutes();
         stops = await repository.getStops;
         updates = await repository.getUpdates;
 
-        yield RoutesLoaded(
+        //yield
+        return RoutesLoaded(
             routes: routes,
             darkRoutes: darkRoutes,
             location: location,
@@ -47,5 +52,6 @@ class RoutesBloc extends Bloc<RoutesEvent, RoutesState> {
             stops: stops);
         break;
     }
+    return RoutesLoading();
   }
 }

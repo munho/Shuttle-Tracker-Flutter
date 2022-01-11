@@ -24,6 +24,10 @@ class FusionBloc extends Bloc<FusionEvent, FusionState> {
 
   FusionBloc({@required this.fusionSocket}) : super(FusionInitial()) {
     connect(fusionSocket: fusionSocket);
+    on<FusionEvent>((event, emit) async {
+      var state = await mapEventToState(event);
+      emit(state);
+    });
   }
 
   void connect({@required FusionSocket fusionSocket}) {
@@ -60,10 +64,9 @@ class FusionBloc extends Bloc<FusionEvent, FusionState> {
     });
   }
 
-  @override
-  Stream<FusionState> mapEventToState(
+  Future<FusionState> mapEventToState(
     FusionEvent event,
-  ) async* {
+  ) async {
     if (event is GetFusionVehicleData) {
       var data = await event.shuttleUpdate;
       if (shuttleColors[data.routeId] != null) {
@@ -80,10 +83,10 @@ class FusionBloc extends Bloc<FusionEvent, FusionState> {
 
       currentShuttles = list;
 
-      yield FusionVehicleLoaded(updates: currentShuttles);
+      return FusionVehicleLoaded(updates: currentShuttles);
     } else if (event is GetFusionETAData) {
       var data = event.shuttleETAs;
-      yield FusionETALoaded(etas: data, updates: currentShuttles);
+      return FusionETALoaded(etas: data, updates: currentShuttles);
     }
   }
 

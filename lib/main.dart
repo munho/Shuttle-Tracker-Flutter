@@ -23,10 +23,13 @@ import 'widgets/ios_cupertino_app.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  HydratedBloc.storage = await HydratedStorage.build(
+  final storage = await HydratedStorage.build(
     storageDirectory: await getTemporaryDirectory(),
   );
-  return runApp(App());
+  HydratedBlocOverrides.runZoned(
+        () => runApp(App()),
+    storage: storage,
+  );
 }
 
 class App extends StatefulWidget {
